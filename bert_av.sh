@@ -1,5 +1,5 @@
 #intensive module
-export SQUAD_DIR=data/squad-v2
+export SQUAD_DIR=data/squad-v2-dummy
 python ./run_av_bce.py \
     --model_type albert \
     --model_name_or_path albert-base-v2 \
@@ -22,4 +22,5 @@ python ./run_av_bce.py \
     --save_steps 2500 \
     --n_best_size=20 \
     --max_answer_length=30 \
-    --fp16
+    --fp16 \
+    --overwrite_output_dir
