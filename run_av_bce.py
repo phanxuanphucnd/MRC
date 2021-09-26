@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2021 by Phuc Phan
+# from __future__ import absolute_import, division, print_function
 
 import os
 import glob
@@ -54,10 +55,6 @@ except:
     from tensorboardX import SummaryWriter
 
 logger = logging.getLogger(__name__)
-
-ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) \
-                  for conf in (BertConfig)), ())
-
 
 MODEL_CLASSES = {
     'bert': (BertConfig, BertForQuestionAnsweringAVPoolBCE, BertTokenizer),
@@ -388,7 +385,7 @@ def main():
     parser.add_argument("--model_type", default=None, type=str, required=True,
                         help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-                        help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(ALL_MODELS))
+                        help="Path to pre-trained model.")
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model checkpoints and predictions will be written.")
 
