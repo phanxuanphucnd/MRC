@@ -45,9 +45,9 @@ from transformers.data.metrics.squad_metrics import (
     compute_predictions_log_probs, 
     squad_evaluate
 )
-from modeling_bert import BertForQuestionAnsweringAVPool, BertForQuestionAnsweringAVPoolBCE
-from modeling_albert import AlbertForQuestionAnsweringAVPool, AlbertForQuestionAnsweringAVPoolBCE
-from modeling_roberta import RobertaForQuestionAnsweringAVPool, RobertaForQuestionAnsweringAVPoolBCE
+from modeling_bert import BertForQuestionAnsweringAVPoolBCE
+from modeling_albert import AlbertForQuestionAnsweringAVPoolBCE
+from modeling_roberta import RobertaForQuestionAnsweringAVPoolBCE
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -57,9 +57,9 @@ except:
 logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
-    'bert': (BertConfig, BertForQuestionAnsweringAVPool, BertTokenizer),
-    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPool, AlbertTokenizer),
-    'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPool, AutoTokenizer),
+    'bert': (BertConfig, BertForQuestionAnsweringAVPoolBCE, BertTokenizer),
+    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPoolBCE, AlbertTokenizer),
+    'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPoolBCE, AutoTokenizer),
 }
 
 def set_seed(args):
@@ -73,9 +73,10 @@ def to_list(tensor):
     return tensor.detach().cpu().tolist()
 
 def train(args, train_dataset, model, tokenizer):
+    """ Train the model """
     if args.local_rank in [-1, 0]:
         tb_writer = SummaryWriter()
-    
+
     args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
     train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
     train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
@@ -103,7 +104,6 @@ def train(args, train_dataset, model, tokenizer):
         
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
-    
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model)
@@ -114,9 +114,6 @@ def train(args, train_dataset, model, tokenizer):
                                                           output_device=args.local_rank,
                                                           find_unused_parameters=True)
 
-
-    print(model)
-    
     # Train!
     logger.info("***** Running training *****")
     logger.info("  Num examples = %d", len(train_dataset))
@@ -313,7 +310,7 @@ def evaluate(args, model, tokenizer, prefix=""):
         predictions = compute_predictions_logits(examples, features, all_results, args.n_best_size,
                         args.max_answer_length, args.do_lower_case, output_prediction_file,
                         output_nbest_file, output_null_log_odds_file, args.verbose_logging,
-                        args.version_2_with_negative, args.null_score_diff_threshold, tokenizer)
+                        args.version_2_with_negative, args.null_score_diff_threshold)
 
     with open(os.path.join(args.output_dir, str(prefix) + "_eval_examples.pkl"), 'wb') as f:
         pickle.dump(examples, f)
@@ -329,7 +326,6 @@ def evaluate(args, model, tokenizer, prefix=""):
     #                         args.null_score_diff_threshold)
     results = eval_squad(os.path.join(args.data_dir, args.predict_file), output_prediction_file, output_null_log_odds_file,
                             args.null_score_diff_threshold)
-    
     return results
 
 def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=False):
@@ -378,8 +374,8 @@ def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=Fal
 
     if output_examples:
         return dataset, examples, features
-    
     return dataset
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -392,15 +388,18 @@ def main():
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model checkpoints and predictions will be written.")
 
-    ## Others parameters
+    ## Other parameters
     parser.add_argument("--padding_side", default="right", type=str,
                         help="right/left, padding_side of passage / question")
     parser.add_argument("--data_dir", default="", type=str,
-                        help="The input data dir. Should contain the .json files for the task.")
+                        help="The input data dir. Should contain the .json files for the task." +
+                             "If no data dir or train/predict files are specified, will run with tensorflow_datasets.")
     parser.add_argument("--train_file", default=None, type=str,
-                        help="The input training file. If a data dir is specified, will look for the file there.")
+                        help="The input training file. If a data dir is specified, will look for the file there" +
+                             "If no data dir or train/predict files are specified, will run with tensorflow_datasets.")
     parser.add_argument("--predict_file", default=None, type=str,
-                        help="The input evaluation file. If a data dir is specified, will look for the file there.")
+                        help="The input evaluation file. If a data dir is specified, will look for the file there" +
+                             "If no data dir or train/predict files are specified, will run with tensorflow_datasets.")
     parser.add_argument("--config_name", default="", type=str,
                         help="Pretrained config name or path if not the same as model_name")
     parser.add_argument("--tokenizer_name", default="", type=str,
@@ -483,18 +482,15 @@ def main():
                              "See details at https://nvidia.github.io/apex/amp.html")
     parser.add_argument('--server_ip', type=str, default='', help="Can be used for distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
-
     args = parser.parse_args()
 
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train and not args.overwrite_output_dir:
-        raise ValueError(
-            "Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(args.output_dir))
+        raise ValueError("Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(args.output_dir))
 
     # Setup distant debugging if needed
     if args.server_ip and args.server_port:
         # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
         import ptvsd
-
         print("Waiting for debugger attach")
         ptvsd.enable_attach(address=(args.server_ip, args.server_port), redirect_output=True)
         ptvsd.wait_for_attach()
@@ -508,7 +504,6 @@ def main():
         device = torch.device("cuda", args.local_rank)
         torch.distributed.init_process_group(backend='nccl')
         args.n_gpu = 1
-
     args.device = device
 
     # Setup logging
@@ -532,11 +527,14 @@ def main():
     tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                 do_lower_case=args.do_lower_case,
                                                 cache_dir=args.cache_dir if args.cache_dir else None)
+    # print(tokenizer.padding_side)
+    # tokenizer.padding_side = args.padding_side
+    # print(tokenizer.padding_side)
+
     model = model_class.from_pretrained(args.model_name_or_path,
                                         from_tf=bool('.ckpt' in args.model_name_or_path),
                                         config=config,
                                         cache_dir=args.cache_dir if args.cache_dir else None)
-
 
     if args.local_rank == 0:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
@@ -561,6 +559,7 @@ def main():
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
+
     # Save the trained model and the tokenizer
     if args.do_train and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         # Create output directory if needed
@@ -581,6 +580,7 @@ def main():
         model = model_class.from_pretrained(args.output_dir, force_download=True)
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, do_lower_case=args.do_lower_case)
         model.to(args.device)
+
 
     # Evaluation - we can ask to evaluate all the checkpoints (sub-directories) in a directory
     results = {}
@@ -621,8 +621,8 @@ def main():
             logger.info("  %s = %s", key, str(results[key]))
             writer.write("%s = %s\t" % (key, str(results[key])))
             writer.write("\t\n")
-
     return results
+
 
 if __name__ == "__main__":
     main()
