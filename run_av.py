@@ -45,7 +45,7 @@ from transformers.data.metrics.squad_metrics import (
     compute_predictions_log_probs, 
     squad_evaluate
 )
-from modeling import BertForQuestionAnsweringAVPool, AlbertForQuestionAnsweringAVPool
+from modeling import BertForQuestionAnsweringAVPool, AlbertForQuestionAnsweringAVPool, RobertaForQuestionAnsweringAVPool
 from modeling import BertForQuestionAnsweringAVPoolBCE, AlbertForQuestionAnsweringAVPoolBCE, RobertaForQuestionAnsweringAVPoolBCE
 
 try:
@@ -56,9 +56,9 @@ except:
 logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
-    'bert': (BertConfig, BertForQuestionAnsweringAVPoolBCE, BertTokenizer),
-    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPoolBCE, AlbertTokenizer),
-    'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPoolBCE, AutoTokenizer),
+    'bert': (BertConfig, BertForQuestionAnsweringAVPool, BertTokenizer),
+    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPool, AlbertTokenizer),
+    'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPool, AutoTokenizer),
 }
 
 def set_seed(args):
