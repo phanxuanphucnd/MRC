@@ -3,6 +3,7 @@
 
 import os
 import glob
+from re import I
 import torch
 import pickle
 import random
@@ -22,14 +23,12 @@ from torch.utils.data import (
 from transformers import (
     WEIGHTS_NAME, 
     BertConfig,
-    BertForQuestionAnswering,
     BertTokenizer,
     RobertaConfig,
-    RobertaForQuestionAnswering,
     RobertaTokenizer,
     AlbertConfig,
-    AlbertForQuestionAnswering,
-    AlbertTokenizer
+    AlbertTokenizer,
+    AutoTokenizer
 )
 from transformers import (
     AdamW, 
@@ -47,7 +46,7 @@ from transformers.data.metrics.squad_metrics import (
     squad_evaluate
 )
 from modeling import BertForQuestionAnsweringAVPool, AlbertForQuestionAnsweringAVPool
-from modeling import BertForQuestionAnsweringAVPoolBCE, AlbertForQuestionAnsweringAVPoolBCE
+from modeling import BertForQuestionAnsweringAVPoolBCE, AlbertForQuestionAnsweringAVPoolBCE, RobertaForQuestionAnsweringAVPoolBCE
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -57,8 +56,9 @@ except:
 logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
-    'bert': (BertConfig, BertForQuestionAnsweringAVPool, BertTokenizer),
-    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPool, AlbertTokenizer),
+    'bert': (BertConfig, BertForQuestionAnsweringAVPoolBCE, BertTokenizer),
+    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPoolBCE, AlbertTokenizer),
+    'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPoolBCE, AutoTokenizer),
 }
 
 def set_seed(args):

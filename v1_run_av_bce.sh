@@ -15,8 +15,8 @@ python ./run_av_bce.py \
     --max_seq_length 512 \
     --doc_stride 128 \
     --max_query_length=64 \
-    --per_gpu_train_batch_size=16 \
-    --per_gpu_eval_batch_size=36 \
+    --per_gpu_train_batch_size=8 \
+    --per_gpu_eval_batch_size=16 \
     --warmup_steps=814 \
     --output_dir visquad-v1/phobert-base \
     --eval_all_checkpoints \
