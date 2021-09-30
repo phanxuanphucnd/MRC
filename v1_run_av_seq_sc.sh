@@ -10,8 +10,8 @@ python ./run_av_seq_sc.py \
     --do_lower_case \
     --train_file $SQUAD_DIR/$TRAIN_FILE \
     --predict_file $SQUAD_DIR/$DEV_FILE \
-    --learning_rate 3e-5 \
-    --num_train_epochs 1 \
+    --learning_rate 2e-5 \
+    --num_train_epochs 30 \
     --max_seq_length 256 \
     --doc_stride 128 \
     --max_query_length=64 \
