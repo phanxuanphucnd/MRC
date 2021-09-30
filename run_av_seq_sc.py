@@ -3,7 +3,6 @@
 
 import os
 import glob
-from re import I
 import torch
 import pickle
 import random
@@ -37,7 +36,7 @@ from transformers import (
 from transformers import (
     AdamW, 
     get_linear_schedule_with_warmup,
-    squad_convert_examples_to_features
+    # squad_convert_examples_to_features
 )
 from transformers.data.processors.squad import (
     SquadV1Processor, 
@@ -49,6 +48,7 @@ from transformers.data.metrics.squad_metrics import (
     compute_predictions_log_probs, 
     squad_evaluate
 )
+from modules import squad_convert_examples_to_features
 from modeling_bert import BertForQuestionAnsweringSeqSC 
 from modeling_albert import AlbertForQuestionAnsweringSeqSC
 from modeling_roberta import RobertaForQuestionAnsweringSeqSC
@@ -377,7 +377,7 @@ def main():
     parser.add_argument("--model_type", default=None, type=str, required=True,
                         help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-                        help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(ALL_MODELS))
+                        help="Path to pre-trained model.")
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model checkpoints and predictions will be written.")
     ## Other parameters
