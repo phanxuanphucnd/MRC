@@ -6,16 +6,13 @@ import numpy as np
 import torch.nn as nn
 
 from tqdm import tqdm
+from transformers.file_utils import is_torch_available
 from transformers.tokenization_utils_base import BatchEncoding
-from transformers.file_utils import is_torch_available, is_tf_available
 from transformers.models.bert.tokenization_bert import whitespace_tokenize
 
 if is_torch_available():
     import torch
     from torch.utils.data import TensorDataset
-
-if is_tf_available():
-    import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
@@ -204,40 +201,9 @@ class TrmCoAtt(nn.Module):
 
 
 def squad_convert_examples_to_features(
-    examples, tokenizer, max_seq_length, doc_stride, max_query_length, is_training, return_dataset=False, regression=False, pq_end=False,
+    examples, tokenizer, max_seq_length, doc_stride, max_query_length, 
+    is_training, return_dataset=False, regression=False, pq_end=False,
 ):
-    """
-    Converts a list of examples into a list of features that can be directly given as input to a model.
-    It is model-dependant and takes advantage of many of the tokenizer's features to create the model's inputs.
-
-    Args:
-        examples: list of :class:`~transformers.data.processors.squad.SquadExample`
-        tokenizer: an instance of a child of :class:`~transformers.PreTrainedTokenizer`
-        max_seq_length: The maximum sequence length of the inputs.
-        doc_stride: The stride used when the context is too large and is split across several features.
-        max_query_length: The maximum length of the query.
-        is_training: whether to create features for model evaluation or model training.
-        return_dataset: Default False. Either 'pt' or 'tf'.
-            if 'pt': returns a torch.data.TensorDataset,
-            if 'tf': returns a tf.data.Dataset
-
-    Returns:
-        list of :class:`~transformers.data.processors.squad.SquadFeatures`
-
-    Example::
-
-        processor = SquadV2Processor()
-        examples = processor.get_dev_examples(data_dir)
-
-        features = squad_convert_examples_to_features( 
-            examples=examples,
-            tokenizer=tokenizer,
-            max_seq_length=args.max_seq_length,
-            doc_stride=args.doc_stride,
-            max_query_length=args.max_query_length,
-            is_training=not evaluate,
-        )
-    """
     # Defining helper methods
     unique_id = 1000000000
 
@@ -496,49 +462,6 @@ def squad_convert_examples_to_features(
                 )
 
         return features, dataset
-    elif return_dataset == "tf":
-        if not is_tf_available():
-            raise ImportError("TensorFlow must be installed to return a TensorFlow dataset.")
-
-        def gen():
-            for ex in features:
-                yield (
-                    {
-                        "input_ids": ex.input_ids,
-                        "attention_mask": ex.attention_mask,
-                        "token_type_ids": ex.token_type_ids,
-                    }, {
-                        "start_position": ex.start_position,
-                        "end_position": ex.end_position,
-                        "cls_index": ex.cls_index,
-                        "p_mask": ex.p_mask,
-                    }
-                )
-
-        return tf.data.Dataset.from_generator(
-            gen,
-            (
-                {"input_ids": tf.int32, "attention_mask": tf.int32, "token_type_ids": tf.int32},
-                {"start_position": tf.int64, "end_position": tf.int64, "cls_index": tf.int64, "p_mask": tf.int32},
-            ),
-            (
-                {
-                    "input_ids": tf.TensorShape([None]),
-                    "attention_mask": tf.TensorShape([None]),
-                    "token_type_ids": tf.TensorShape([None]),
-                },
-                {
-                    "start_position": tf.TensorShape([]),
-                    "end_position": tf.TensorShape([]),
-                    "cls_index": tf.TensorShape([]),
-                    "p_mask": tf.TensorShape([None]),
-                },
-            ),
-        )
-
-    return features
-
-
 
 class SquadFeatures(object):
     """
