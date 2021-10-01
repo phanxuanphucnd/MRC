@@ -266,31 +266,15 @@ def evaluate(args, model, tokenizer, prefix=""):
             eval_feature = features[example_index.item()]
             unique_id = int(eval_feature.unique_id)
 
-            print(output)
-
-            output = [to_list(output[i]) for output in outputs]
+            # output = [to_list(output[i]) for output in outputs if output is not None]            
 
             # Some models (XLNet, XLM) use 5 arguments for their predictions, while the other "simpler"
             # models only use two.
-            if len(output) >= 5:
-                start_logits = output[0]
-                start_top_index = output[1]
-                end_logits = output[2]
-                end_top_index = output[3]
-                cls_logits = output[4]
 
-                result = SquadResult(
-                    unique_id, start_logits, end_logits, 
-                    start_top_index=start_top_index, 
-                    end_top_index=end_top_index, 
-                    cls_logits=cls_logits
-                )
-
-            else:
-                start_logits, end_logits  = output
-                result = SquadResult(
-                    unique_id, start_logits, end_logits
-                )
+            start_logits, end_logits = to_list(outputs.start_logits[i]), to_list(outputs.end_logits[i])
+            result = SquadResult(
+                unique_id, start_logits, end_logits
+            )
 
             all_results.append(result)
 
