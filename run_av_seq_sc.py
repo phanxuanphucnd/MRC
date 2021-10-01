@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2021 by Phuc Phan
 
 import os
 import glob
@@ -64,8 +62,8 @@ MODEL_CLASSES = {
     'bert': (BertConfig, BertForQuestionAnsweringSeqSC, BertTokenizer),
     'albert': (AlbertConfig, AlbertForQuestionAnsweringSeqSC, AlbertTokenizer),
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringSeqSC, AutoTokenizer),
-    'xlm-r': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
-    'xlm-r-pool': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
+    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
+    'xlm-roberta-pool': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
 }
 
 def set_seed(args):
@@ -509,7 +507,7 @@ def main():
                                           cache_dir=args.cache_dir if args.cache_dir else None)
     tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                 do_lower_case=args.do_lower_case,
-                                                cache_dir=args.cache_dir if args.cache_dir else None)
+                                                cache_dir=args.cache_dir if args.cache_dir else None,  use_fast=False)
 
     model = model_class.from_pretrained(args.model_name_or_path,
                                         from_tf=bool('.ckpt' in args.model_name_or_path),

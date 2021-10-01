@@ -5,7 +5,7 @@
 import torch
 import torch.nn as nn
 
-from torch.nn import CrossEntropyLoss, MSELoss
+from torch.nn import CrossEntropyLoss
 from modules import masked_softmax, SCAttention, split_ques_context, TrmCoAtt
 from transformers.models.roberta.modeling_roberta import RobertaPreTrainedModel, RobertaModel
 

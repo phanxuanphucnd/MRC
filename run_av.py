@@ -28,7 +28,6 @@ from transformers import (
     RobertaTokenizer,
     XLMRobertaConfig,
     XLMRobertaForQuestionAnswering,
-    XLMRobertaModel,
     XLMRobertaTokenizer,
     AlbertConfig,
     AlbertTokenizer,
@@ -49,9 +48,10 @@ from transformers.data.metrics.squad_metrics import (
     compute_predictions_log_probs, 
     squad_evaluate
 )
-from modeling_bert import BertForQuestionAnsweringAVPool, BertForQuestionAnsweringAVPoolBCE
-from modeling_albert import AlbertForQuestionAnsweringAVPool, AlbertForQuestionAnsweringAVPoolBCE
-from modeling_roberta import RobertaForQuestionAnsweringAVPool, RobertaForQuestionAnsweringAVPoolBCE
+from modeling_bert import BertForQuestionAnsweringAVPool
+from modeling_albert import AlbertForQuestionAnsweringAVPool
+from modeling_roberta import RobertaForQuestionAnsweringAVPool
+from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -64,8 +64,8 @@ MODEL_CLASSES = {
     'bert': (BertConfig, BertForQuestionAnsweringAVPool, BertTokenizer),
     'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPool, AlbertTokenizer),
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPool, AutoTokenizer),
-    'xlm-r': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
-    'xlm-r-pool': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
+    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
+    'xlm-roberta-pool': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
 }
 
 def set_seed(args):
@@ -150,8 +150,9 @@ def train(args, train_dataset, model, tokenizer):
                 'attention_mask':  batch[1],
                 'start_positions': batch[3],
                 'end_positions':   batch[4],
-                'is_impossibles':   batch[5]
             }
+            if args.model_type != 'xlm-roberta':
+                inputs['is_impossibles'] = batch[5]
 
             if args.model_type != 'distilbert':
                 inputs['token_type_ids'] = None if args.model_type == 'xlm' else batch[2]
@@ -526,7 +527,7 @@ def main():
                                           cache_dir=args.cache_dir if args.cache_dir else None)
     tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                 do_lower_case=args.do_lower_case,
-                                                cache_dir=args.cache_dir if args.cache_dir else None)
+                                                cache_dir=args.cache_dir if args.cache_dir else None, use_fast=False)
     model = model_class.from_pretrained(args.model_name_or_path,
                                         from_tf=bool('.ckpt' in args.model_name_or_path),
                                         config=config,
