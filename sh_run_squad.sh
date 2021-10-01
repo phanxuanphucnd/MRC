@@ -2,10 +2,9 @@
 export SQUAD_DIR=data/visquad-v1
 export TRAIN_FILE=train.json
 export DEV_FILE=dev.json
-python ./run_av.py \
+python ./run_squad.py \
     --model_type xlm-roberta \
     --model_name_or_path xlm-roberta-base \
-    --do_train \
     --do_eval \
     --do_lower_case \
     --train_file $SQUAD_DIR/$TRAIN_FILE \
@@ -15,8 +14,8 @@ python ./run_av.py \
     --max_seq_length 256 \
     --doc_stride 128 \
     --max_query_length=64 \
-    --per_gpu_train_batch_size=2 \
-    --per_gpu_eval_batch_size=4 \
+    --per_gpu_train_batch_size=16 \
+    --per_gpu_eval_batch_size=24 \
     --warmup_steps=814 \
     --output_dir visquad-v1/xlm-roberta-large \
     --eval_all_checkpoints \
@@ -24,4 +23,5 @@ python ./run_av.py \
     --n_best_size=20 \
     --max_answer_length=30 \
     --overwrite_output_dir \
-    --fp16
+    --fp16 \
+    --overwrite_output_dir 

@@ -24,13 +24,16 @@ from transformers import (
     WEIGHTS_NAME, 
     BertConfig,
     BertTokenizer,
+    BertForQuestionAnswering,
     RobertaConfig,
     RobertaTokenizer,
+    RobertaForQuestionAnswering,
     XLMRobertaConfig,
     XLMRobertaForQuestionAnswering,
     XLMRobertaTokenizer,
     AlbertConfig,
     AlbertTokenizer,
+    AlbertForQuestionAnswering,
     AutoTokenizer
 )
 from transformers import (
@@ -48,10 +51,6 @@ from transformers.data.metrics.squad_metrics import (
     compute_predictions_log_probs, 
     squad_evaluate
 )
-from modeling_bert import BertForQuestionAnsweringAVPool
-from modeling_albert import AlbertForQuestionAnsweringAVPool
-from modeling_roberta import RobertaForQuestionAnsweringAVPool
-from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -61,10 +60,10 @@ except:
 logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
-    'bert': (BertConfig, BertForQuestionAnsweringAVPool, BertTokenizer),
-    'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPool, AlbertTokenizer),
-    'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPool, AutoTokenizer),
-    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
+    'bert': (BertConfig, BertForQuestionAnswering, BertTokenizer),
+    'albert': (AlbertConfig, AlbertForQuestionAnswering, AlbertTokenizer),
+    'phobert': (RobertaConfig, RobertaForQuestionAnswering, AutoTokenizer),
+    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer)
 }
 
 def set_seed(args):
@@ -267,6 +266,8 @@ def evaluate(args, model, tokenizer, prefix=""):
             eval_feature = features[example_index.item()]
             unique_id = int(eval_feature.unique_id)
 
+            print(output)
+
             output = [to_list(output[i]) for output in outputs]
 
             # Some models (XLNet, XLM) use 5 arguments for their predictions, while the other "simpler"
@@ -286,9 +287,9 @@ def evaluate(args, model, tokenizer, prefix=""):
                 )
 
             else:
-                start_logits, end_logits, choice_logits  = output
+                start_logits, end_logits  = output
                 result = SquadResult(
-                    unique_id, start_logits, end_logits, choice_logits
+                    unique_id, start_logits, end_logits
                 )
 
             all_results.append(result)
