@@ -1,4 +1,6 @@
-import copy
+# -*- coding: utf-8 -*-
+# Copyright (c) 2021 by Phuc Phan
+
 import math
 import torch
 import logging
