@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2021 by Phuc Phan
 
+import os
 import math
+import json
 import torch
 import logging
 import numpy as np
 import torch.nn as nn
 
 from tqdm import tqdm
+from transformers.data import processors
 from transformers.file_utils import is_torch_available
+from transformers import glue_processors, glue_output_modes
 from transformers.tokenization_utils_base import BatchEncoding
 from transformers.models.bert.tokenization_bert import whitespace_tokenize
+from transformers.data.processors.utils import DataProcessor, InputExample
 
 if is_torch_available():
     import torch
@@ -465,6 +470,38 @@ def squad_convert_examples_to_features(
 
         return features, dataset
 
+class InputFeatures(object):
+    """
+    A single set of features of data.
+
+    Args:
+        input_ids: Indices of input sequence tokens in the vocabulary.
+        attention_mask: Mask to avoid performing attention on padding token indices.
+            Mask values selected in ``[0, 1]``:
+            Usually  ``1`` for tokens that are NOT MASKED, ``0`` for MASKED (padded) tokens.
+        token_type_ids: Segment token indices to indicate first and second portions of the inputs.
+        label: Label corresponding to the input
+    """
+
+    def __init__(self, input_ids, attention_mask=None, token_type_ids=None, label=None, pq_end_pos=None):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
+        self.token_type_ids = token_type_ids
+        self.label = label
+        self.pq_end_pos = pq_end_pos
+
+    def __repr__(self):
+        return str(self.to_json_string())
+
+    def to_dict(self):
+        """Serializes this instance to a Python dictionary."""
+        output = copy.deepcopy(self.__dict__)
+        return output
+
+    def to_json_string(self):
+        """Serializes this instance to a JSON string."""
+        return json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n"
+
 class SquadFeatures(object):
     """
     Single squad example features to be fed to a model.
@@ -567,3 +604,212 @@ def _improve_answer_span(doc_tokens, input_start, input_end, tokenizer, orig_ans
                 return (new_start, new_end)
 
     return (input_start, input_end)
+
+def glue_convert_examples_to_features(examples, tokenizer,
+                                      max_length=512,
+                                      task=None,
+                                      label_list=None,
+                                      output_mode=None,
+                                      pad_on_left=False,
+                                      pad_token=0,
+                                      pad_token_segment_id=0,
+                                      mask_padding_with_zero=True, 
+                                      output_feature=False, 
+                                      pq_end=False, 
+                                      max_query_length=64):
+    """
+    Loads a data file into a list of ``InputFeatures``
+
+    Args:
+        examples: List of ``InputExamples`` or ``tf.data.Dataset`` containing the examples.
+        tokenizer: Instance of a tokenizer that will tokenize the examples
+        max_length: Maximum example length
+        task: GLUE task
+        label_list: List of labels. Can be obtained from the processor using the ``processor.get_labels()`` method
+        output_mode: String indicating the output mode. Either ``regression`` or ``classification``
+        pad_on_left: If set to ``True``, the examples will be padded on the left rather than on the right (default)
+        pad_token: Padding token
+        pad_token_segment_id: The segment ID for the padding token (It is usually 0, but can vary such as for XLNet where it is 4)
+        mask_padding_with_zero: If set to ``True``, the attention mask will be filled by ``1`` for actual values
+            and by ``0`` for padded values. If set to ``False``, inverts it (``1`` for padded values, ``0`` for
+            actual values)
+        answer_mode: 0(default): original; 1: cat question+answer; 2:cat doc+answer; 3:dual
+    Returns:
+        If the ``examples`` input is a ``tf.data.Dataset``, will return a ``tf.data.Dataset``
+        containing the task-specific features. If the input is a list of ``InputExamples``, will return
+        a list of task-specific ``InputFeatures`` which can be fed to the model.
+
+    """
+    is_tf_dataset = False
+
+    if task is not None:
+        processor = glue_processors[task]()
+        if label_list is None:
+            label_list = processor.get_labels()
+            logger.info("Using label list %s for task %s" % (label_list, task))
+        if output_mode is None:
+            output_mode = glue_output_modes[task]
+            logger.info("Using output mode %s for task %s" % (output_mode, task))
+
+    label_map = {label: i for i, label in enumerate(label_list)}
+
+    features = []
+    id_map = {}
+    for (ex_index, example) in enumerate(examples):
+        if ex_index % 10000 == 0:
+            logger.info("Writing example %d" % (ex_index))
+        if is_tf_dataset:
+            example = processor.get_example_from_tensor_dict(example)
+            example = processor.tfds_map(example)
+        id_map[ex_index] = example.guid
+
+
+        if pq_end:
+            query = tokenizer.encode(
+                example.text_a, add_special_tokens=False, max_length=max_query_length
+            )
+        else:
+            query = example.text_a
+        inputs = tokenizer.encode_plus(
+            query,
+            example.text_b,
+            add_special_tokens=True,
+            max_length=max_length,
+        )
+        input_ids, token_type_ids = inputs["input_ids"], inputs["token_type_ids"]
+
+        # The mask has 1 for real tokens and 0 for padding tokens. Only real
+        # tokens are attended to.
+        attention_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
+
+        # Zero-pad up to the sequence length.
+        padding_length = max_length - len(input_ids)
+
+        if pad_on_left:
+            input_ids = ([pad_token] * padding_length) + input_ids
+            attention_mask = ([0 if mask_padding_with_zero else 1] * padding_length) + attention_mask
+            token_type_ids = ([pad_token_segment_id] * padding_length) + token_type_ids
+        else:
+            input_ids = input_ids + ([pad_token] * padding_length)
+            attention_mask = attention_mask + ([0 if mask_padding_with_zero else 1] * padding_length)
+            token_type_ids = token_type_ids + ([pad_token_segment_id] * padding_length)
+
+        assert len(input_ids) == max_length, "Error with input length {} vs {}".format(len(input_ids), max_length)
+        assert len(attention_mask) == max_length, "Error with input length {} vs {}".format(len(attention_mask), max_length)
+        assert len(token_type_ids) == max_length, "Error with input length {} vs {}".format(len(token_type_ids), max_length)
+
+        if output_mode == "classification":
+            label = label_map[example.label]
+        elif output_mode == "regression":
+            label = float(example.label)
+        else:
+            raise KeyError(output_mode)
+
+        if ex_index < 5:
+            logger.info("*** Example ***")
+            logger.info("guid: %s" % (example.guid))
+            logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
+            logger.info("attention_mask: %s" % " ".join([str(x) for x in attention_mask]))
+            logger.info("token_type_ids: %s" % " ".join([str(x) for x in token_type_ids]))
+            logger.info("label: %s (id = %d)" % (example.label, label))
+        #obtain pa_end
+        if pq_end:
+            seq_len = attention_mask.count(1)
+            text_b_len = token_type_ids.count(1)
+            text_a_len = seq_len - text_b_len
+            question_end_index = text_a_len - 1
+            doc_end_index = seq_len - 1
+            pq_end_pos = [question_end_index,doc_end_index] #hack here, q and p are written reversely to keep consistent with the modeling
+            features.append(
+                InputFeatures(input_ids=input_ids,
+                              attention_mask=attention_mask,
+                              token_type_ids=token_type_ids,
+                              label=label,
+                              pq_end_pos=pq_end_pos))
+        else:
+            features.append(
+                InputFeatures(input_ids=input_ids,
+                              attention_mask=attention_mask,
+                              token_type_ids=token_type_ids,
+                              label=label))
+
+    if output_feature:
+        return features,id_map
+    return features
+
+
+class SQuADProcessor(DataProcessor):
+    """Processor for the WNLI data set (GLUE version)."""
+
+    def get_example_from_tensor_dict(self, tensor_dict):
+        """See base class."""
+        return InputExample(tensor_dict['idx'].numpy(),
+                            tensor_dict['sentence1'].numpy().decode('utf-8'),
+                            tensor_dict['sentence2'].numpy().decode('utf-8'),
+                            str(tensor_dict['label'].numpy()))
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_squad(os.path.join(data_dir, "train-v2.0.json")), "train")
+
+    def get_dev_examples(self, data_dir, answer_dir=None):
+        """See base class."""
+        if answer_dir:
+            return self._create_examples(
+                self._read_squad(os.path.join(data_dir, "dev-v2.0.json")), "dev", self._read_ans(answer_dir))
+        else:
+            return self._create_examples(
+                self._read_squad(os.path.join(data_dir, "dev-v2.0.json")), "dev")
+
+    def get_test_examples(self, data_dir, answer_dir=None):
+        """See base class."""
+        if answer_dir:
+            return self._create_examples(
+                self._read_squad(data_dir), "test", self._read_ans(answer_dir))
+        else:
+            return self._create_examples(
+                self._read_squad(data_dir), "test")
+    def get_labels(self):
+        """See base class."""
+        return ["0", "1"]
+
+    def _read_squad(self, input_file):
+        """Reads a tab separated value file."""
+        with open(input_file, "r", encoding="utf-8") as reader:
+            input_data = json.load(reader)["data"]
+            return input_data
+
+    def _create_examples(self, input_data, set_type, answer_pred=None):
+        examples = []
+        for entry in input_data:
+            for paragraph in entry["paragraphs"]:
+                context_text = paragraph["context"]
+                for qa in paragraph["qas"]:
+                    qas_id = qa["id"]
+                    question_text = qa["question"]
+                    is_impossible = qa["is_impossible"]
+                    if is_impossible:
+                        label = "1"
+                    else:
+                        label = "0"
+                    # answer_text = ""
+                    # if not is_impossible:
+                    #     if set_type == "train":
+                    #         if len(qa["answers"]) == 0:
+                    #             print("empty answer!!!")
+                    #             continue
+                    #         answer = qa["answers"][0]
+                    #         answer_text = answer["text"]
+                    #     elif answer_pred != None:
+                    #         answer_text = answer_pred[qas_id]
+                    examples.append(
+                        InputExample(guid=qas_id, text_a=question_text, text_b=context_text, label=label))
+                        # InputExample(guid=qas_id, text_a=question_text, text_b=context_text, answer=answer_text, label=label))
+        return examples
+
+processors = glue_processors
+processors.update({"squad": SQuADProcessor})
+
+output_modes = glue_output_modes
+output_modes.update({"squad": "classification",})

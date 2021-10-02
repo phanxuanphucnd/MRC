@@ -22,15 +22,23 @@ from torch.utils.data import (
 from torch.utils.data.distributed import DistributedSampler
 from transformers import (
     WEIGHTS_NAME, 
+    AlbertConfig,
+    AlbertForSequenceClassification, 
+    AlbertTokenizer,
     RobertaConfig, 
     RobertaForSequenceClassification, 
-    RobertaTokenizer
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    XLMRobertaConfig,
+    XLMRobertaForSequenceClassification,
+    XLMRobertaTokenizer,
 )
-from transformers import glue_processors as processors
-from transformers import glue_output_modes as output_modes
 from transformers import AdamW, get_linear_schedule_with_warmup
-from transformers import glue_compute_metrics as compute_metrics
-from transformers import glue_convert_examples_to_features as convert_examples_to_features
+
+from metrics import glue_compute_metrics as compute_metrics
+from modules import processors, output_modes, glue_convert_examples_to_features as convert_examples_to_features
+
+
 
 
 try:
@@ -43,7 +51,9 @@ csv.field_size_limit(sys.maxsize)
 logger = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
-    'roberta': (RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer),
+    'albert': (AlbertConfig, AlbertForSequenceClassification, AlbertTokenizer),
+    'phobert': (RobertaConfig, AutoModelForSequenceClassification, AutoTokenizer),
+    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForSequenceClassification, XLMRobertaTokenizer),
 }
 
 def set_seed(args):
@@ -228,7 +238,8 @@ def evaluate(args, model, tokenizer, prefix=""):
                           'attention_mask': batch[1],
                           'labels':         batch[3]}
                 if args.model_type != 'distilbert':
-                    inputs['token_type_ids'] = batch[2] if args.model_type in ['bert', 'xlnet'] else None  # XLM, DistilBERT and RoBERTa don't use segment_ids
+                    # XLM, DistilBERT and RoBERTa don't use segment_ids
+                    inputs['token_type_ids'] = batch[2] if args.model_type in ['bert', 'xlnet'] else None 
                 outputs = model(**inputs)
                 tmp_eval_loss, logits = outputs[:2]
 
@@ -287,13 +298,14 @@ def evaluate(args, model, tokenizer, prefix=""):
 
 def load_and_cache_examples(args, task, tokenizer, evaluate=False, predict=False):
     if args.local_rank not in [-1, 0] and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+        # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+        torch.distributed.barrier() 
 
     processor = processors[task]()
     output_mode = output_modes[task]
 
     label_list = processor.get_labels()
-    if task in ['mnli', 'mnli-mm'] and args.model_type in ['roberta', 'xlmroberta']:
+    if task in ['mnli', 'mnli-mm'] and args.model_type in ['roberta', 'xlm-roberta']:
         # HACK(label indices are swapped in RoBERTa pretrained model)
         label_list[1], label_list[2] = label_list[2], label_list[1]
     if predict:
@@ -307,14 +319,15 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False, predict=False
                                             output_mode=output_mode,
                                             pad_on_left=bool(args.model_type in ['xlnet']),                 # pad on the left for xlnet
                                             pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
-                                            pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0,output_feature=True,
-    )
+                                            pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0, 
+                                            output_feature=True,)
     # if args.local_rank in [-1, 0]:
     #     logger.info("Saving features into cached file %s", cached_features_file)
     #     torch.save(features, cached_features_file)
 
     if args.local_rank == 0 and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+        # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+        torch.distributed.barrier() 
 
     # Convert to Tensors and build dataset
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
