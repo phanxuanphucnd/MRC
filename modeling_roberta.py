@@ -62,9 +62,7 @@ class RobertaForQuestionAnsweringAVPool(RobertaPreTrainedModel):
             choice_loss = loss_fct(has_log, is_impossibles)
             total_loss = (start_loss + end_loss + choice_loss) / 3
             outputs = (total_loss,) + outputs
-            # print(sum(is_impossibles==1),sum(is_impossibles==0))
-            # print(start_logits, end_logits, has_log, is_impossibles)
-            # print(start_loss, end_loss, choice_loss)
+            # print(sum(is_impossibles==1),sum(is_impossibles==0))cd 
         
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
 
