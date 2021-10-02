@@ -2,8 +2,8 @@
 export DATA_DIR=data/uit-visquad
 export TASK_NAME=squad
 python run_ev.py \
-    --model_type albert \
-    --model_name_or_path albert-xxlarge-v2 \
+    --model_type phobert \
+    --model_name_or_path vinai/phobert-base \
     --task_name $TASK_NAME \
     --do_train \
     --do_eval \
