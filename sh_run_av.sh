@@ -23,5 +23,4 @@ python ./run_av.py \
     --save_steps 2500 \
     --n_best_size=20 \
     --max_answer_length=30 \
-    --overwrite_output_dir \
     --overwrite_output_dir 
