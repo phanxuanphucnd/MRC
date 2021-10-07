@@ -38,9 +38,6 @@ from transformers import AdamW, get_linear_schedule_with_warmup
 from metrics import glue_compute_metrics as compute_metrics
 from modules import processors, output_modes, glue_convert_examples_to_features as convert_examples_to_features
 
-
-
-
 try:
     from torch.utils.tensorboard import SummaryWriter
 except:
@@ -125,6 +122,7 @@ def train(args, train_dataset, model, tokenizer):
         for step, batch in enumerate(epoch_iterator):
             model.train()
             batch = tuple(t.to(args.device) for t in batch)
+
             inputs = {'input_ids':      batch[0],
                       'attention_mask': batch[1],
                       'labels':         batch[3]}
@@ -309,9 +307,9 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False, predict=False
         # HACK(label indices are swapped in RoBERTa pretrained model)
         label_list[1], label_list[2] = label_list[2], label_list[1]
     if predict:
-        examples = processor.get_test_examples(args.predict_file)
+        examples = processor.get_test_examples(args.predict_file, args.predict_file)
     else:
-        examples = processor.get_dev_examples(args.data_dir) if evaluate else processor.get_train_examples(args.data_dir)
+        examples = processor.get_dev_examples(args.data_dir, args.dev_file) if evaluate else processor.get_train_examples(args.data_dir, args.train_file)
     features, id_map = convert_examples_to_features(examples,
                                             tokenizer,
                                             label_list=label_list,
@@ -350,6 +348,10 @@ def main():
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
     parser.add_argument("--predict_file", default=None, type=str, required=False,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
+    parser.add_argument("--train_file", default=None, type=str,
+                        help="The input training file. If a data dir is specified, will look for the file there.")
+    parser.add_argument("--dev_file", default=None, type=str,
+                        help="The input evaluation file. If a data dir is specified, will look for the file there.")
     parser.add_argument("--model_type", default=None, type=str, required=True,
                         help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,

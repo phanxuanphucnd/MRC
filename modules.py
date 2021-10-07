@@ -4,6 +4,7 @@
 import os
 import math
 import json
+import copy
 import torch
 import logging
 import numpy as np
@@ -675,9 +676,10 @@ def glue_convert_examples_to_features(examples, tokenizer,
             example.text_b,
             add_special_tokens=True,
             max_length=max_length,
+            return_token_type_ids=True,
         )
         input_ids, token_type_ids = inputs["input_ids"], inputs["token_type_ids"]
-
+        
         # The mask has 1 for real tokens and 0 for padding tokens. Only real
         # tokens are attended to.
         attention_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
@@ -748,19 +750,19 @@ class SQuADProcessor(DataProcessor):
                             tensor_dict['sentence2'].numpy().decode('utf-8'),
                             str(tensor_dict['label'].numpy()))
 
-    def get_train_examples(self, data_dir):
+    def get_train_examples(self, data_dir, train_file):
         """See base class."""
         return self._create_examples(
-            self._read_squad(os.path.join(data_dir, "train-v2.0.json")), "train")
+            self._read_squad(os.path.join(data_dir, train_file)), "train")
 
-    def get_dev_examples(self, data_dir, answer_dir=None):
+    def get_dev_examples(self, data_dir, dev_file, answer_dir=None):
         """See base class."""
         if answer_dir:
             return self._create_examples(
-                self._read_squad(os.path.join(data_dir, "dev-v2.0.json")), "dev", self._read_ans(answer_dir))
+                self._read_squad(os.path.join(data_dir, dev_file)), "dev", self._read_ans(answer_dir))
         else:
             return self._create_examples(
-                self._read_squad(os.path.join(data_dir, "dev-v2.0.json")), "dev")
+                self._read_squad(os.path.join(data_dir, dev_file)), "dev")
 
     def get_test_examples(self, data_dir, answer_dir=None):
         """See base class."""
@@ -770,6 +772,7 @@ class SQuADProcessor(DataProcessor):
         else:
             return self._create_examples(
                 self._read_squad(data_dir), "test")
+    
     def get_labels(self):
         """See base class."""
         return ["0", "1"]
