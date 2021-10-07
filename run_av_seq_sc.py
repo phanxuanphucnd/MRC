@@ -22,10 +22,7 @@ from transformers import (
     BertConfig,
     BertTokenizer,
     RobertaConfig,
-    RobertaTokenizer,
     XLMRobertaConfig,
-    XLMRobertaForQuestionAnswering,
-    XLMRobertaModel,
     XLMRobertaTokenizer,
     AlbertConfig,
     AlbertTokenizer,
@@ -43,14 +40,13 @@ from transformers.data.processors.squad import (
 )
 from transformers.data.metrics.squad_metrics import (
     compute_predictions_logits, 
-    compute_predictions_log_probs, 
-    squad_evaluate
+    compute_predictions_log_probs
 )
 from modules import squad_convert_examples_to_features
 from modeling_bert import BertForQuestionAnsweringSeqSC 
 from modeling_albert import AlbertForQuestionAnsweringSeqSC
 from modeling_roberta import RobertaForQuestionAnsweringSeqSC
-from modeling_xlm_roberta
+from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringSeqSC
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -63,7 +59,7 @@ MODEL_CLASSES = {
     'bert': (BertConfig, BertForQuestionAnsweringSeqSC, BertTokenizer),
     'albert': (AlbertConfig, AlbertForQuestionAnsweringSeqSC, AlbertTokenizer),
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringSeqSC, AutoTokenizer),
-    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
+    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringSeqSC, XLMRobertaTokenizer),
 }
 
 def set_seed(args):
