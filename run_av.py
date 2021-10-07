@@ -148,9 +148,10 @@ def train(args, train_dataset, model, tokenizer):
                 'attention_mask':  batch[1],
                 'start_positions': batch[3],
                 'end_positions':   batch[4],
+                'is_impossibles': batch[5]
             }
-            if args.model_type != 'xlm-roberta':
-                inputs['is_impossibles'] = batch[5]
+            # if args.model_type != 'xlm-roberta':
+            #     inputs['is_impossibles'] = batch[5]
 
             if args.model_type != 'distilbert':
                 inputs['token_type_ids'] = None if args.model_type == 'xlm' else batch[2]
