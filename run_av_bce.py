@@ -28,7 +28,9 @@ from transformers import (
     RobertaTokenizer,
     AlbertConfig,
     AlbertTokenizer,
-    AutoTokenizer
+    AutoTokenizer,
+    XLMRobertaConfig,
+    XLMRobertaTokenizer
 )
 from transformers import (
     AdamW, 
@@ -48,6 +50,7 @@ from transformers.data.metrics.squad_metrics import (
 from modeling_bert import BertForQuestionAnsweringAVPoolBCE
 from modeling_albert import AlbertForQuestionAnsweringAVPoolBCE
 from modeling_roberta import RobertaForQuestionAnsweringAVPoolBCE
+from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPoolBCE
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -60,6 +63,7 @@ MODEL_CLASSES = {
     'bert': (BertConfig, BertForQuestionAnsweringAVPoolBCE, BertTokenizer),
     'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPoolBCE, AlbertTokenizer),
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPoolBCE, AutoTokenizer),
+    'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPoolBCE, XLMRobertaTokenizer),
 }
 
 def set_seed(args):

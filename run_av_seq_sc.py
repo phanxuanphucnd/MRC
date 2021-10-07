@@ -50,6 +50,7 @@ from modules import squad_convert_examples_to_features
 from modeling_bert import BertForQuestionAnsweringSeqSC 
 from modeling_albert import AlbertForQuestionAnsweringSeqSC
 from modeling_roberta import RobertaForQuestionAnsweringSeqSC
+from modeling_xlm_roberta
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -63,7 +64,6 @@ MODEL_CLASSES = {
     'albert': (AlbertConfig, AlbertForQuestionAnsweringSeqSC, AlbertTokenizer),
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringSeqSC, AutoTokenizer),
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
-    'xlm-roberta-pool': (XLMRobertaConfig, XLMRobertaForQuestionAnswering, XLMRobertaTokenizer),
 }
 
 def set_seed(args):
