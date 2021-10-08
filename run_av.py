@@ -50,7 +50,7 @@ from transformers.data.metrics.squad_metrics import (
 from modeling_bert import BertForQuestionAnsweringAVPool
 from modeling_albert import AlbertForQuestionAnsweringAVPool
 from modeling_roberta import RobertaForQuestionAnsweringAVPool
-from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool
+from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool, XLMRobertaForQuestionAnsweringAVPoolBCE
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -63,6 +63,7 @@ MODEL_CLASSES = {
     'bert': (BertConfig, BertForQuestionAnsweringAVPool, BertTokenizer),
     'albert': (AlbertConfig, AlbertForQuestionAnsweringAVPool, AlbertTokenizer),
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPool, AutoTokenizer),
+    'bartpho': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, AutoTokenizer), 
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
 }
 

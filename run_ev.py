@@ -270,7 +270,10 @@ def evaluate(args, model, tokenizer, prefix=""):
             preds = np.argmax(preds, axis=1)
         elif args.output_mode == "regression":
             preds = np.squeeze(preds)
+
         result = compute_metrics(eval_task, preds, out_label_ids)
+        cls_report = result.pop('report')
+        print(cls_report)
         results.update(result)
 
         final_map = {}

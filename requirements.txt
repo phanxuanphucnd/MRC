@@ -3,3 +3,4 @@ transformers==4.5.1
 sentencepiece
 matplotlib
 tensorboardX
+sklearn

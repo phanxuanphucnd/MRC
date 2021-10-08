@@ -9,10 +9,10 @@ from modules import SCAttention, split_ques_context, TrmCoAtt
 from transformers.models.roberta.modeling_roberta import RobertaPreTrainedModel, RobertaModel
 
 class RobertaForQuestionAnsweringAVPool(RobertaPreTrainedModel):
-    def __init__(self, config):
+    def __init__(self, config, no_answer_loss_coef:float=1.0, ):
         super(RobertaForQuestionAnsweringAVPool, self).__init__(config)
         self.num_labels = config.num_labels
-
+        self.no_answer_loss_coef = no_answer_loss_coef
         self.roberta = RobertaModel(config)
         self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
         self.has_ans = nn.Sequential(nn.Dropout(p=config.hidden_dropout_prob), nn.Linear(config.hidden_size, 2))
@@ -21,12 +21,14 @@ class RobertaForQuestionAnsweringAVPool(RobertaPreTrainedModel):
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
                 inputs_embeds=None, start_positions=None, end_positions=None, is_impossibles=None):
 
-        outputs = self.roberta(input_ids,
-                            attention_mask=attention_mask,
-                            token_type_ids=token_type_ids,
-                            position_ids=position_ids,
-                            head_mask=head_mask,
-                            inputs_embeds=inputs_embeds)
+        outputs = self.roberta(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds
+        )
 
         sequence_output = outputs[0]
 
@@ -59,7 +61,7 @@ class RobertaForQuestionAnsweringAVPool(RobertaPreTrainedModel):
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
             choice_loss = loss_fct(has_log, is_impossibles)
-            total_loss = (start_loss + end_loss + choice_loss) / 3
+            total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
             outputs = (total_loss,) + outputs
             # print(sum(is_impossibles==1),sum(is_impossibles==0))cd 
         
@@ -131,9 +133,10 @@ class RobertaForQuestionAnsweringAVPoolBCE(RobertaPreTrainedModel):
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
 
 class RobertaForQuestionAnsweringSeqSC(RobertaPreTrainedModel):
-    def __init__(self, config):
+    def __init__(self, config, no_answer_loss_coef: float=1.0, ):
         super(RobertaForQuestionAnsweringSeqSC, self).__init__(config)
         self.num_labels = config.num_labels
+        self.no_answer_loss_coef = no_answer_loss_coef
         self.roberta = RobertaModel(config)
         self.attention = SCAttention(config.hidden_size, config.hidden_size)
         self.has_ans = nn.Sequential(nn.Dropout(p=config.hidden_dropout_prob), nn.Linear(config.hidden_size, 2))
@@ -187,7 +190,7 @@ class RobertaForQuestionAnsweringSeqSC(RobertaPreTrainedModel):
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
             choice_loss = loss_fct(has_log, is_impossibles)
-            total_loss = (start_loss + end_loss + choice_loss) / 3
+            total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
             
             outputs = (total_loss,) + outputs
 
@@ -199,6 +202,7 @@ class RobertaForQuestionAnsweringSeqTrm(RobertaPreTrainedModel):
         self.num_labels = config.num_labels
         self.roberta = RobertaModel(config)
         self.albert_att = TrmCoAtt(config)
+        self.has_ans = nn.Sequential(nn.Dropout(p=config.hidden_dropout_prob), nn.Linear(config.hidden_size, 2))
         self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
 
         self.init_weights()
@@ -227,6 +231,9 @@ class RobertaForQuestionAnsweringSeqTrm(RobertaPreTrainedModel):
         start_logits = start_logits.squeeze(-1)
         end_logits = end_logits.squeeze(-1)
 
+        first_word = sequence_output[:, 0, :]
+        has_log = self.has_ans(first_word)
+
         outputs = (start_logits, end_logits,) + outputs[2:]
         if start_positions is not None and end_positions is not None:
             # If we are on multi-GPU, split add a dimension
@@ -242,7 +249,9 @@ class RobertaForQuestionAnsweringSeqTrm(RobertaPreTrainedModel):
             loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
-            total_loss = (start_loss + end_loss) / 2
+            choice_loss = loss_fct(has_log, is_impossibles)
+            total_loss = (start_loss + end_loss + choice_loss) / 3
+            # total_loss = (start_loss + end_loss) / 2
             outputs = (total_loss,) + outputs
 
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
