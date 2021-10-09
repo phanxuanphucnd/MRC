@@ -269,6 +269,7 @@ def squad_convert_examples_to_features(
                 span_doc_tokens if tokenizer.padding_side == "right" else truncated_query,
                 max_length=max_seq_length,
                 return_overflowing_tokens=True,
+                return_token_type_ids=True,
                 pad_to_max_length=True,
                 stride=max_seq_length - doc_stride - len(truncated_query) - sequence_pair_added_tokens,
                 truncation_strategy="only_second" if tokenizer.padding_side == "right" else "only_first",
