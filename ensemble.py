@@ -18,7 +18,8 @@ def ensemble_from_nbest(folder_dir: str='ensembles'):
 
     list_id_qas = list(datas[0].keys())
 
-    print("The numbers of questions: ", len(list_id_qas))
+    print("The numbers of predicted files: ", len(os.listdir(folder_dir)))
+    print("The numbers of questions      : ", len(list_id_qas))
 
     prediction = {}
 

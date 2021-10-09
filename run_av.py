@@ -550,7 +550,7 @@ def main():
             apex.amp.register_half_function(torch, 'einsum')
         except ImportError:
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-
+    start_time = timeit.default_timer()
     # Training
     if args.do_train:
         train_dataset = load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=False)
@@ -617,6 +617,9 @@ def main():
             logger.info("  %s = %s", key, str(results[key]))
             writer.write("%s = %s\t" % (key, str(results[key])))
             writer.write("\t\n")
+
+    runtime = timeit.default_timer() - start_time
+    logger.info(f"Running time: {runtime}")
 
     return results
 
