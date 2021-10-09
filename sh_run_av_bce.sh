@@ -23,6 +23,6 @@ python ./run_av_bce.py \
     --eval_all_checkpoints \
     --save_steps 2500 \
     --n_best_size=20 \
-    --max_answer_length=30 \
+    --max_answer_length=50 \
     --overwrite_output_dir \
     --fp16

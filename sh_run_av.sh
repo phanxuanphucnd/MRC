@@ -1,7 +1,7 @@
 #Intensive module
 export SQUAD_DIR=data/uit-visquad
-export TRAIN_FILE=train-2.json
-export DEV_FILE=dev-2.json
+export TRAIN_FILE=train-3.json
+export DEV_FILE=dev-3.json
 export PREDICT_FILE=ptest.json
 python ./run_av.py \
     --model_type xlm-roberta \
@@ -20,9 +20,8 @@ python ./run_av.py \
     --per_gpu_train_batch_size=8 \
     --per_gpu_eval_batch_size=16 \
     --warmup_steps=814 \
-    --output_dir models/uit-visquad/xlm-roberta-large-av  \
-    --eval_all_checkpoints \
+    --output_dir models/uit-visquad/xlm-roberta-large-av-3  \
     --save_steps 2500 \
     --n_best_size=20 \
     --max_answer_length=50 \
-    --overwrite_output_dir 
+    --overwrite_output_dir
