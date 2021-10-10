@@ -10,7 +10,8 @@ def ensemble_from_nbest(folder_dir: str='ensembles'):
     
     for file in os.listdir(folder_dir):
         file_path = f"{folder_dir}/{file}"
-        files_path.append(file_path)
+        if 'NOT' not in file_path:
+            files_path.append(file_path)
     
     for file_path in files_path:
         with open(file_path, 'r+', encoding='utf-8') as f:
@@ -18,7 +19,7 @@ def ensemble_from_nbest(folder_dir: str='ensembles'):
 
     list_id_qas = list(datas[0].keys())
 
-    print("The numbers of predicted files: ", len(os.listdir(folder_dir)))
+    print("The numbers of predicted files: ", len(files_path), files_path)
     print("The numbers of questions      : ", len(list_id_qas))
 
     prediction = {}
