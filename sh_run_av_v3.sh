@@ -6,13 +6,14 @@ export PREDICT_FILE=ptest.json
 python ./run_av_all.py \
     --model_type xlm-roberta \
     --model_name_or_path xlm-roberta-large \
+    --do_train \
     --do_eval \
     --do_lower_case \
     --version_2_with_negative \
     --train_file $SQUAD_DIR/$TRAIN_FILE \
     --predict_file $SQUAD_DIR/$DEV_FILE \
     --learning_rate 2e-5 \
-    --num_train_epochs 10 \
+    --num_train_epochs 15 \
     --max_seq_length 384 \
     --doc_stride 128 \
     --max_query_length=64 \
