@@ -5,8 +5,8 @@ export DEV_FILE=dev-0.json
 export PREDICT_FILE=ptest.json
 export TASK_NAME=squad
 python run_ev.py \
-    --model_type phobert \
-    --model_name_or_path vinai/phobert-base \
+    --model_type bartpho-syllable \
+    --model_name_or_path vinai/bartpho-syllable \
     --task_name $TASK_NAME \
     --train_file $TRAIN_FILE \
     --dev_file $TRAIN_FILE \
@@ -15,12 +15,12 @@ python run_ev.py \
     --do_lower_case \
     --data_dir $DATA_DIR \
     --max_seq_length 256 \
-    --per_gpu_train_batch_size=16 \
-    --per_gpu_eval_batch_size=32 \
+    --per_gpu_train_batch_size=8 \
+    --per_gpu_eval_batch_size=16 \
     --warmup_steps=814 \
     --learning_rate 2e-5 \
-    --num_train_epochs 5 \
+    --num_train_epochs 10 \
     --eval_all_checkpoints \
-    --output_dir models/cls/phobert \
+    --output_dir models/cls \
     --save_steps 2500 \
     --overwrite_output_dir 

@@ -11,6 +11,7 @@ import random
 import logging
 import argparse
 import numpy as np
+import bartpho_utils 
 
 from tqdm import tqdm, trange
 from torch.utils.data import (
@@ -32,6 +33,9 @@ from transformers import (
     XLMRobertaConfig,
     XLMRobertaForSequenceClassification,
     XLMRobertaTokenizer,
+    AutoConfig,
+    AutoTokenizer,
+    AutoModelForSequenceClassification
 )
 from transformers import AdamW, get_linear_schedule_with_warmup
 
@@ -51,6 +55,7 @@ MODEL_CLASSES = {
     'albert': (AlbertConfig, AlbertForSequenceClassification, AlbertTokenizer),
     'phobert': (RobertaConfig, AutoModelForSequenceClassification, AutoTokenizer),
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForSequenceClassification, XLMRobertaTokenizer),
+    'bartpho-syllable': (AutoConfig, AutoModelForSequenceClassification, AutoTokenizer)
 }
 
 def set_seed(args):
@@ -475,7 +480,11 @@ def main():
                                           num_labels=num_labels,
                                           finetuning_task=args.task_name,
                                           cache_dir=args.cache_dir if args.cache_dir else None)
-    tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
+    
+    if args.model_type == 'bartpho-syllable':
+        tokenizer = bartpho_utils.adjustVocab(XLMRobertaTokenizer.from_pretrained(args.model_name_or_path))
+    else:
+        tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                 do_lower_case=args.do_lower_case,
                                                 cache_dir=args.cache_dir if args.cache_dir else None)
     model = model_class.from_pretrained(args.model_name_or_path,
