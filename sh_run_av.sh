@@ -4,8 +4,9 @@ export TRAIN_FILE=train-0.json
 export DEV_FILE=dev-0.json
 export PREDICT_FILE=ptest.json
 python ./run_av.py \
-    --model_type xlm-roberta \
+    --model_type xlm-roberta-dep \
     --model_name_or_path xlm-roberta-large \
+    --do_train \
     --do_eval \
     --do_lower_case \
     --version_2_with_negative \
@@ -19,7 +20,7 @@ python ./run_av.py \
     --per_gpu_train_batch_size=8 \
     --per_gpu_eval_batch_size=16 \
     --warmup_steps=814 \
-    --output_dir models/uit-visquad/xlm-r-0 \
+    --output_dir models/uit-visquad/xlm-r-dep-0 \
     --eval_all_checkpoints \
     --save_steps 2500 \
     --n_best_size=20 \
