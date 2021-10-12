@@ -8,4 +8,4 @@ from torch.nn import CrossEntropyLoss
 from transformers import MT5Config, MT5Tokenizer, T5Tokenizer, T5PreTrainedModel
 
 class MT5ForQuestionAnswering(T5PreTrainedModel):
-    
+    pass

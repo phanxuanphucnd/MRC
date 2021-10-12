@@ -5,7 +5,8 @@ from transformers import XLMRobertaConfig
 from modeling_roberta import (
     RobertaForQuestionAnsweringAVPool, 
     RobertaForQuestionAnsweringAVPoolBCE, 
-    RobertaForQuestionAnsweringSeqSC
+    RobertaForQuestionAnsweringSeqSC,
+    RobertaForQuestionAnsweringAVPoolBCEV3
 )
 
 class XLMRobertaForQuestionAnsweringAVPool(RobertaForQuestionAnsweringAVPool):
@@ -15,4 +16,7 @@ class XLMRobertaForQuestionAnsweringAVPoolBCE(RobertaForQuestionAnsweringAVPoolB
     config_class = XLMRobertaConfig
 
 class XLMRobertaForQuestionAnsweringSeqSC(RobertaForQuestionAnsweringSeqSC):
+    config_class = XLMRobertaConfig
+
+class XLMRobertaForQuestionAnsweringAVPoolBCEV3(RobertaForQuestionAnsweringAVPoolBCEV3):
     config_class = XLMRobertaConfig

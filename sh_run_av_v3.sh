@@ -3,7 +3,7 @@ export SQUAD_DIR=data/uit-visquad
 export TRAIN_FILE=train-0.json
 export DEV_FILE=dev-0.json
 export PREDICT_FILE=ptest.json
-python ./run_av.py \
+python ./run_av_all.py \
     --model_type xlm-roberta \
     --model_name_or_path xlm-roberta-large \
     --do_eval \
