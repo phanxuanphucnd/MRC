@@ -402,10 +402,8 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
             is_impossibles.clamp_(0, ignored_index)
 
             loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
-            print("=== ", start_logits.size() , start_positions.size())
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
-            print("=== ", end_logits.size() , end_positions.size())
             choice_loss = loss_fct(has_log, is_impossibles)
             total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
             
