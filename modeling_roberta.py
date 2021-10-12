@@ -379,8 +379,10 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
         final_repr = gelu(self.end_pooler(torch.cat([start_logits, sequence_output], dim=-1)))
         end_logits = self.end_outputs(final_repr)
 
-        first_word = sequence_output[:, 0, :]
+        start_logits = start_logits.squeeze(-1)
+        end_logits = end_logits.squeeze(-1)
 
+        first_word = sequence_output[:, 0, :]
         has_log = self.has_ans(first_word)
 
         outputs = (start_logits, end_logits, has_log,) + outputs[2:]
@@ -400,12 +402,13 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
             is_impossibles.clamp_(0, ignored_index)
 
             loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
-            bi_fct = nn.BCEWithLogitsLoss()
-            start_loss = bi_fct(start_logits, start_positions)
-            end_loss = bi_fct(end_logits, end_positions)
+            print("=== ", start_logits.size() , start_positions.size())
+            start_loss = loss_fct(start_logits, start_positions)
+            end_loss = loss_fct(end_logits, end_positions)
+            print("=== ", end_logits.size() , end_positions.size())
             choice_loss = loss_fct(has_log, is_impossibles)
             total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
+            
             outputs = (total_loss,) + outputs
-            # print(sum(is_impossibles==1),sum(is_impossibles==0))cd 
         
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
