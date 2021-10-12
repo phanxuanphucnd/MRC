@@ -55,7 +55,7 @@ MODEL_CLASSES = {
     'albert': (AlbertConfig, AlbertForSequenceClassification, AlbertTokenizer),
     'phobert': (RobertaConfig, AutoModelForSequenceClassification, AutoTokenizer),
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForSequenceClassification, XLMRobertaTokenizer),
-    'bartpho-syllable': (AutoConfig, AutoModelForSequenceClassification, AutoTokenizer)
+    'bartpho-syllable': (AutoConfig, AutoModelForSequenceClassification, XLMRobertaTokenizer)
 }
 
 def set_seed(args):
