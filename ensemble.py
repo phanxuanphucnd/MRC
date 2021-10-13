@@ -4,7 +4,7 @@
 import os
 import json
 
-def ensemble_from_nbest(folder_dir: str='ensembles'):
+def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
     files_path = []
     datas = []
     
