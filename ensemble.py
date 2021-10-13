@@ -10,10 +10,11 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
     
     for file in os.listdir(folder_dir):
         file_path = f"{folder_dir}/{file}"
-        if 'NOT' not in file_path:
+        if 'NOT' not in file_path and 'results' not in file_path:
             files_path.append(file_path)
     
     for file_path in files_path:
+        print(file_path)
         with open(file_path, 'r+', encoding='utf-8') as f:
             datas.append(json.load(f))
 
@@ -46,4 +47,4 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
         wf.write(json.dumps(prediction, indent=4, ensure_ascii=False) + "\n")
 
 
-ensemble_from_nbest()
+ensemble_from_nbest(folder_dir='ensembles/pool')
