@@ -46,4 +46,4 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
         wf.write(json.dumps(prediction, indent=4, ensure_ascii=False) + "\n")
 
 
-ensemble_from_nbest()
+ensemble_from_nbest(folder_dir='./ensembles/all')
