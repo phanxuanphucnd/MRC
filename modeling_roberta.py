@@ -343,11 +343,19 @@ class RobertaForQuestionAnsweringAVPoolBCEV3(RobertaPreTrainedModel):
 
 
 class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
-    def __init__(self, config, no_answer_loss_coef:float=1.0):
+    def __init__(
+        self, 
+        config, 
+        start_coef: float=None, 
+        end_coef: float=None,
+        has_ans_coef: float=None, 
+    ):
         super(RobertaForQuestionAnsweringAVDep, self).__init__(config)
         
         self.num_labels = config.num_labels
-        self.no_answer_loss_coef = no_answer_loss_coef
+        self.start_coef = start_coef
+        self.end_coef = end_coef
+        self.has_ans_coef = has_ans_coef
         
         self.roberta = RobertaModel(config)
         self.start_outputs = nn.Linear(config.hidden_size, 1)
@@ -405,7 +413,11 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
             choice_loss = loss_fct(has_log, is_impossibles)
-            total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
+            
+            if self.start_coef and self.end_coef and self.has_ans_coef:
+                total_loss = self.start_coef*start_loss + self.end_coef*end_loss + self.has_ans_coef*choice_loss
+            else:
+                total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
             
             outputs = (total_loss,) + outputs
         
