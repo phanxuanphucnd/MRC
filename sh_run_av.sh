@@ -1,7 +1,7 @@
 #Intensive module
 export SQUAD_DIR=data/uit-visquad
-export TRAIN_FILE=train-0.json
-export DEV_FILE=dev-0.json
+export TRAIN_FILE=train-4.json
+export DEV_FILE=dev-4.json
 export PREDICT_FILE=ptest.json
 python ./run_av.py \
     --model_type xlm-roberta-dep \
@@ -18,9 +18,9 @@ python ./run_av.py \
     --doc_stride 128 \
     --max_query_length=64 \
     --per_gpu_train_batch_size=8 \
-    --per_gpu_eval_batch_size=16 \
+    --per_gpu_eval_batch_size=8 \
     --warmup_steps=814 \
-    --output_dir models/uit-visquad/xlm-r-dep-0 \
+    --output_dir models/uit-visquad/xlm-r-dep-4 \
     --eval_all_checkpoints \
     --save_steps 2500 \
     --n_best_size=20 \
