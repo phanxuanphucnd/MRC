@@ -16,7 +16,7 @@ from transformers.file_utils import is_torch_available
 from transformers import glue_processors, glue_output_modes
 from transformers.tokenization_utils_base import BatchEncoding
 from transformers.models.bert.tokenization_bert import whitespace_tokenize
-from transformers.data.processors.utils import DataProcessor, InputExample
+from transformers.data.processors.utils import DataProcessor #, InputExample
 
 if is_torch_available():
     import torch
@@ -797,20 +797,52 @@ class SQuADProcessor(DataProcessor):
                         label = "1"
                     else:
                         label = "0"
-                    # answer_text = ""
-                    # if not is_impossible:
-                    #     if set_type == "train":
-                    #         if len(qa["answers"]) == 0:
-                    #             print("empty answer!!!")
-                    #             continue
-                    #         answer = qa["answers"][0]
-                    #         answer_text = answer["text"]
-                    #     elif answer_pred != None:
-                    #         answer_text = answer_pred[qas_id]
+                    answer_text = ""
+                    if not is_impossible:
+                        if set_type == "train":
+                            if len(qa["answers"]) == 0:
+                                print("empty answer!!!")
+                                continue
+                            answer = qa["answers"][0]
+                            answer_text = answer["text"]
+                        elif answer_pred != None:
+                            answer_text = answer_pred[qas_id]
                     examples.append(
-                        InputExample(guid=qas_id, text_a=question_text, text_b=context_text, label=label))
-                        # InputExample(guid=qas_id, text_a=question_text, text_b=context_text, answer=answer_text, label=label))
+                        # InputExample(guid=qas_id, text_a=question_text, text_b=context_text, label=label))
+                        InputExample(guid=qas_id, text_a=question_text, text_b=context_text, answer=answer_text, label=label))
         return examples
+
+class InputExample(object):
+    """
+    A single training/test example for simple sequence classification.
+
+    Args:
+        guid: Unique id for the example.
+        text_a: string. The untokenized text of the first sequence. For single
+        sequence tasks, only this sequence must be specified.
+        text_b: (Optional) string. The untokenized text of the second sequence.
+        Only must be specified for sequence pair tasks.
+        label: (Optional) string. The label of the example. This should be
+        specified for train and dev examples, but not for test examples.
+    """
+    def __init__(self, guid, text_a, text_b=None, answer=None, label=None):
+        self.guid = guid
+        self.text_a = text_a
+        self.text_b = text_b
+        self.label = label
+        self.answer = answer
+
+    def __repr__(self):
+        return str(self.to_json_string())
+
+    def to_dict(self):
+        """Serializes this instance to a Python dictionary."""
+        output = copy.deepcopy(self.__dict__)
+        return output
+
+    def to_json_string(self):
+        """Serializes this instance to a JSON string."""
+        return json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n"
 
 processors = glue_processors
 processors.update({"squad": SQuADProcessor})
