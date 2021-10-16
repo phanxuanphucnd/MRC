@@ -346,9 +346,9 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
     def __init__(
         self, 
         config, 
-        start_coef: float=None, 
-        end_coef: float=None,
-        has_ans_coef: float=None, 
+        start_coef: float=0.3, 
+        end_coef: float=0.3,
+        has_ans_coef: float=0.4, 
     ):
         super(RobertaForQuestionAnsweringAVDep, self).__init__(config)
         
@@ -417,7 +417,7 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
             if self.start_coef and self.end_coef and self.has_ans_coef:
                 total_loss = self.start_coef*start_loss + self.end_coef*end_loss + self.has_ans_coef*choice_loss
             else:
-                total_loss = (start_loss + end_loss + self.no_answer_loss_coef * choice_loss) / 3
+                total_loss = (start_loss + end_loss + self.has_ans_coef * choice_loss) / 3
             
             outputs = (total_loss,) + outputs
         
