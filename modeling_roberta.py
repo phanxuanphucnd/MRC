@@ -6,6 +6,7 @@ import math
 import torch
 import torch.nn as nn
 
+from transformers import *
 from torch.nn import CrossEntropyLoss, MSELoss
 from modules import SCAttention, split_ques_context, TrmCoAtt
 from transformers.models.roberta.modeling_roberta import RobertaPreTrainedModel, RobertaModel
@@ -154,8 +155,10 @@ class RobertaForQuestionAnsweringSeqSC(RobertaPreTrainedModel):
 
         self.init_weights()
 
-    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, pq_end_pos=None, position_ids=None, head_mask=None,
-                inputs_embeds=None, start_positions=None, end_positions=None, is_impossibles=None):
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, pq_end_pos=None, 
+                position_ids=None, head_mask=None, inputs_embeds=None, start_positions=None, 
+                end_positions=None, is_impossibles=None
+    ):
 
         outputs = self.roberta(input_ids,
                             attention_mask=attention_mask,
@@ -422,3 +425,27 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
             outputs = (total_loss,) + outputs
         
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
+
+
+class RobertaForBinaryClassification(BertPreTrainedModel):
+   config_class = RobertaConfig
+   base_model_prefix = "roberta"
+   def __init__(self, config):
+       super(RobertaForBinaryClassification, self).__init__(config)
+       self.num_labels = config.num_labels
+       self.roberta = RobertaModel(config)
+       self.qa_outputs = nn.Linear(4*config.hidden_size, self.num_labels)
+
+       self.init_weights()
+
+   def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
+                start_positions=None, end_positions=None):
+
+       outputs = self.roberta(input_ids,
+                            attention_mask=attention_mask,
+#                            token_type_ids=token_type_ids,
+                            position_ids=position_ids,
+                            head_mask=head_mask)
+       cls_output = torch.cat((outputs[2][-1][:,0, ...],outputs[2][-2][:,0, ...], outputs[2][-3][:,0, ...], outputs[2][-4][:,0, ...]),-1)
+       logits = self.qa_outputs(cls_output)
+       return logits

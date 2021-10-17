@@ -7,7 +7,8 @@ from modeling_roberta import (
     RobertaForQuestionAnsweringAVPoolBCE, 
     RobertaForQuestionAnsweringSeqSC,
     RobertaForQuestionAnsweringAVPoolBCEV3,
-    RobertaForQuestionAnsweringAVDep
+    RobertaForQuestionAnsweringAVDep,
+    RobertaForBinaryClassification
 )
 
 class XLMRobertaForQuestionAnsweringAVPool(RobertaForQuestionAnsweringAVPool):
@@ -24,3 +25,6 @@ class XLMRobertaForQuestionAnsweringAVPoolBCEV3(RobertaForQuestionAnsweringAVPoo
 
 class XLMRobertaForQuestionAnsweringAVDep(RobertaForQuestionAnsweringAVDep):
     config_class = XLMRobertaConfig
+
+class XLMRobertaForBinaryClassification(RobertaForBinaryClassification):
+   config_class = XLMRobertaConfig
