@@ -776,7 +776,7 @@ class SQuADProcessor(DataProcessor):
     
     def get_labels(self):
         """See base class."""
-        return ["0", "1"]
+        return [0, 1]
 
     def _read_squad(self, input_file):
         """Reads a tab separated value file."""
@@ -794,9 +794,9 @@ class SQuADProcessor(DataProcessor):
                     question_text = qa["question"]
                     is_impossible = qa["is_impossible"]
                     if is_impossible:
-                        label = "1"
+                        label = 1
                     else:
-                        label = "0"
+                        label = 0
                     answer_text = ""
                     if not is_impossible:
                         if set_type == "train":
