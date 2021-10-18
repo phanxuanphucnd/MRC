@@ -455,3 +455,97 @@ class RobertaForBinaryClassification(BertPreTrainedModel):
         logits = self.qa_outputs(cls_output)
         
         return logits
+
+class RobertaForQuestionAnsweringAVDep2(RobertaPreTrainedModel):
+    def __init__(
+        self, 
+        config, 
+        start_coef: float=0.3, 
+        end_coef: float=0.3,
+        has_ans_coef: float=0.4, 
+    ):
+        super(RobertaForQuestionAnsweringAVDep2, self).__init__(config)
+        
+        self.num_labels = config.num_labels
+        self.start_coef = start_coef
+        self.end_coef = end_coef
+        self.has_ans_coef = has_ans_coef
+        
+        self.roberta = RobertaModel(config)
+        self.start_outputs = nn.Linear(config.hidden_size, 1)
+        self.end_pooler = nn.Linear(1 + config.hidden_size, 512)
+        self.end_outputs = nn.Linear(512, 1)
+        self.has_ans = nn.Sequential(nn.Dropout(p=config.hidden_dropout_prob), nn.Linear(config.hidden_size, 2))
+        
+        self.init_weights()
+
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
+                inputs_embeds=None, start_positions=None, end_positions=None, is_impossibles=None):
+
+        outputs = self.roberta(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds
+        )
+
+        sequence_output = outputs[0]
+
+        answer_mask = attention_mask * token_type_ids
+        answer_mask = answer_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+
+        # batch, seq
+        device = input_ids.device
+        one_tensor = torch.ones((answer_mask.size(0), 1), device=device).to(
+            dtype=next(self.parameters()).dtype)  # fp16 compatibility
+        answer_mask = torch.cat([one_tensor, answer_mask[:, 1:]], dim=-1)
+
+        start_logits = self.start_outputs(sequence_output)
+        start_logits = start_logits.squeeze(-1)
+        start_logits += 1000.0 * (answer_mask - 1)
+        # batch, seq
+        start_logits = start_logits.unsqueeze(-1)
+
+        final_repr = gelu(self.end_pooler(torch.cat([start_logits, sequence_output], dim=-1)))
+        end_logits = self.end_outputs(final_repr)
+
+        start_logits = start_logits.squeeze(-1)
+        end_logits = end_logits.squeeze(-1)
+
+        end_logits += 1000.0 * (answer_mask - 1)
+
+        first_word = sequence_output[:, 0, :]
+        has_log = self.has_ans(first_word)
+
+        outputs = (start_logits, end_logits, has_log, ) + outputs[2:]
+        if start_positions is not None and end_positions is not None:
+            # If we are on multi-GPU, split add a dimension
+            if len(start_positions.size()) > 1:
+                start_positions = start_positions.squeeze(-1)
+            if len(end_positions.size()) > 1:
+                end_positions = end_positions.squeeze(-1)
+            if len(is_impossibles.size()) > 1:
+                is_impossibles = is_impossibles.squeeze(-1)
+
+            # sometimes the start/end positions are outside our model inputs, we ignore these terms
+            ignored_index = start_logits.size(1)
+            start_positions.clamp_(0, ignored_index)
+            end_positions.clamp_(0, ignored_index)
+            is_impossibles.clamp_(0, ignored_index)
+
+            loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
+            start_loss = loss_fct(start_logits, start_positions)
+            end_loss = loss_fct(end_logits, end_positions)
+            choice_loss = loss_fct(has_log, is_impossibles)
+
+            if self.start_coef and self.end_coef and self.has_ans_coef:
+                total_loss = self.start_coef*start_loss + self.end_coef*end_loss + self.has_ans_coef*choice_loss
+            else:
+                total_loss = (start_loss + end_loss + self.has_ans_coef * choice_loss) / 3
+            
+            outputs = (total_loss,) + outputs
+
+        
+        return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)

@@ -50,7 +50,7 @@ from transformers.data.metrics.squad_metrics import (
 from modeling_bert import BertForQuestionAnsweringAVPool
 from modeling_albert import AlbertForQuestionAnsweringAVPool
 from modeling_roberta import RobertaForQuestionAnsweringAVPool
-from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool, XLMRobertaForQuestionAnsweringAVDep
+from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaForQuestionAnsweringAVDep2
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -65,7 +65,9 @@ MODEL_CLASSES = {
     'phobert': (RobertaConfig, RobertaForQuestionAnsweringAVPool, AutoTokenizer),
     'bartpho': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, AutoTokenizer), 
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
-    'xlm-roberta-dep': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaTokenizer)
+    'xlm-roberta-dep': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaTokenizer),
+    'xlm-roberta-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
+
 }
 
 def set_seed(args):

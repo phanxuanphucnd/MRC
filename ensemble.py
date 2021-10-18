@@ -24,6 +24,7 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
     print("The numbers of questions      : ", len(list_id_qas))
 
     prediction = {}
+    nbest = {}
 
     for id_qas in list_id_qas:
         list_candidate = {}
@@ -34,7 +35,9 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
                     list_candidate[can['text']] = can['probability']
                 else:
                     list_candidate[can['text']] += can['probability']
-            
+        
+        nbest[id_qas] = list_candidate
+
         MAX_SCORE = 0
         prediction[id_qas] = ""
         for key, value in list_candidate.items():
@@ -45,6 +48,9 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
     
     with open(f"{folder_dir}/results.json", 'w', encoding='utf-8') as wf:
         wf.write(json.dumps(prediction, indent=4, ensure_ascii=False) + "\n")
+    
+    with open(f"{folder_dir}/nbest.json", 'w', encoding='utf-8') as wf:
+        wf.write(json.dumps(nbest, indent=4, ensure_ascii=False) + "\n")
 
 
 ensemble_from_nbest(folder_dir='ensembles/all')

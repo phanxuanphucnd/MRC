@@ -189,7 +189,7 @@ class UITMRCDataModule(pl.LightningDataModule):
             num_workers=4
         )
     
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 N_EPOCHS = 10
 
 data_module = UITMRCDataModule(train_df, dev_df, tokenizer, batch_size=BATCH_SIZE)
