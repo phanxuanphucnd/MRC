@@ -1,17 +1,17 @@
 #Intensive module
 export SQUAD_DIR=data/uit-visquad
-export TRAIN_FILE=train-0.json
-export DEV_FILE=dev-0.json
+export TRAIN_FILE=train-1.json
+export DEV_FILE=dev-1.json
 export PREDICT_FILE=ptest.json
 python ./run_av.py \
-    --model_type xlm-roberta-dep2 \
-    --model_name_or_path xlm-roberta-large \
+    --model_type electra-base \
+    --model_name_or_path FPTAI/velectra-base-discriminator-cased \
     --do_train \
     --do_eval \
     --do_lower_case \
     --version_2_with_negative \
     --train_file $SQUAD_DIR/$TRAIN_FILE \
-    --predict_file $SQUAD_DIR/$PREDICT_FILE \
+    --predict_file $SQUAD_DIR/$DEV_FILE \
     --learning_rate 2e-5 \
     --num_train_epochs 15 \
     --max_seq_length 384 \
@@ -20,7 +20,7 @@ python ./run_av.py \
     --per_gpu_train_batch_size=8 \
     --per_gpu_eval_batch_size=16 \
     --warmup_steps=814 \
-    --output_dir models/uit-visquad/xlm-r-dep2-0 \
+    --output_dir models/uit-visquad/xlm-r-electra-0 \
     --eval_all_checkpoints \
     --save_steps 2500 \
     --n_best_size=20 \

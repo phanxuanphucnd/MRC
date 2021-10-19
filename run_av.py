@@ -70,7 +70,7 @@ MODEL_CLASSES = {
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
     'xlm-roberta-dep': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaTokenizer),
     'xlm-roberta-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
-    'electra': (ElectraConfig, ElectraForQuestionAnsweringAVPool, ElectraTokenizer)
+    'electra-base': (ElectraConfig, ElectraForQuestionAnsweringAVPool, ElectraTokenizer)
 }
 
 def set_seed(args):
