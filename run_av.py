@@ -30,7 +30,9 @@ from transformers import (
     XLMRobertaTokenizer,
     AlbertConfig,
     AlbertTokenizer,
-    AutoTokenizer
+    AutoTokenizer,
+    ElectraConfig,
+    ElectraTokenizer
 )
 from transformers import (
     AdamW, 
@@ -49,6 +51,7 @@ from transformers.data.metrics.squad_metrics import (
 )
 from modeling_bert import BertForQuestionAnsweringAVPool
 from modeling_albert import AlbertForQuestionAnsweringAVPool
+from modeling_electra import ElectraForQuestionAnsweringAVPool
 from modeling_roberta import RobertaForQuestionAnsweringAVPool
 from modeling_xlm_roberta import XLMRobertaForQuestionAnsweringAVPool, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaForQuestionAnsweringAVDep2
 
@@ -67,7 +70,7 @@ MODEL_CLASSES = {
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
     'xlm-roberta-dep': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaTokenizer),
     'xlm-roberta-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
-
+    'electra-base': (ElectraConfig, ElectraForQuestionAnsweringAVPool, ElectraTokenizer)
 }
 
 def set_seed(args):
