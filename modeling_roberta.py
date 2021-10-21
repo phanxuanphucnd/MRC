@@ -349,9 +349,9 @@ class RobertaForQuestionAnsweringAVDep(RobertaPreTrainedModel):
     def __init__(
         self, 
         config, 
-        start_coef: float=0.3, 
-        end_coef: float=0.3,
-        has_ans_coef: float=0.4, 
+        start_coef: float=None, 
+        end_coef: float=None,
+        has_ans_coef: float=None, 
     ):
         super(RobertaForQuestionAnsweringAVDep, self).__init__(config)
         
