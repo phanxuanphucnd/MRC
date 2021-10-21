@@ -543,7 +543,7 @@ class RobertaForQuestionAnsweringAVDep2(RobertaPreTrainedModel):
             if self.start_coef and self.end_coef and self.has_ans_coef:
                 total_loss = self.start_coef*start_loss + self.end_coef*end_loss + self.has_ans_coef*choice_loss
             else:
-                total_loss = (start_loss + end_loss + self.has_ans_coef * choice_loss) / 3
+                total_loss = (start_loss + end_loss + choice_loss) / 3
             
             outputs = (total_loss,) + outputs
 
