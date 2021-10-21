@@ -49,8 +49,8 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
     with open(f"{folder_dir}/results.json", 'w', encoding='utf-8') as wf:
         wf.write(json.dumps(prediction, indent=4, ensure_ascii=False) + "\n")
     
-    with open(f"{folder_dir}/nbest.json", 'w', encoding='utf-8') as wf:
-        wf.write(json.dumps(nbest, indent=4, ensure_ascii=False) + "\n")
+    # with open(f"{folder_dir}/nbest.json", 'w', encoding='utf-8') as wf:
+    #     wf.write(json.dumps(nbest, indent=4, ensure_ascii=False) + "\n")
 
 
 ensemble_from_nbest(folder_dir='ensembles/all')
