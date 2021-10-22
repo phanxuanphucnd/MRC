@@ -351,10 +351,11 @@ def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=Fal
 
     # Load data features from cache or dataset file
     input_dir = args.data_dir if args.data_dir else "."
+    
     cached_features_file = os.path.join(input_dir, 'bce_reader_cached_{}_{}_{}_{}'.format(
-        'dev' if evaluate else 'train',
+        args.predict_file if evaluate else args.train_file,
         list(filter(None, args.model_name_or_path.split('/'))).pop(),
-        str(args.max_seq_length),str(args.doc_stride)),
+        str(args.max_seq_length), str(args.doc_stride)),
     )
 
     # Init features and dataset from cache if it exists
@@ -366,6 +367,8 @@ def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=Fal
         logger.info("Creating features from dataset file at %s", input_dir)
 
         processor = SquadV2Processor() if args.version_2_with_negative else SquadV1Processor()
+
+        print(f"FILES: {args.train_file} | {args.predict_file}")
 
         if evaluate:
             examples = processor.get_dev_examples(args.data_dir, filename=args.predict_file)
