@@ -69,7 +69,7 @@ MODEL_CLASSES = {
     'bartpho': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, AutoTokenizer), 
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
     'xlm-roberta-dep': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaTokenizer),
-    'xlm-roberta-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
+    'xlm-robertwa-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
     'electra-base': (ElectraConfig, ElectraForQuestionAnsweringAVPool, ElectraTokenizer)
 }
 
@@ -313,6 +313,7 @@ def evaluate(args, model, tokenizer, prefix=""):
         output_null_log_odds_file = None
 
     # XLNet and XLM use a more complex post-processing procedure
+    # for i in range(0.0, 1.0, 0.01):
     if args.model_type in ['xlnet', 'xlm']:
         start_n_top = model.config.start_n_top if hasattr(model, "config") else model.module.config.start_n_top
         end_n_top = model.config.end_n_top if hasattr(model, "config") else model.module.config.end_n_top
@@ -342,6 +343,7 @@ def evaluate(args, model, tokenizer, prefix=""):
     #                         args.null_score_diff_threshold)
     results = eval_squad(os.path.join(args.data_dir, args.predict_file), output_prediction_file, output_null_log_odds_file,
                             args.null_score_diff_threshold)
+        # print("\n> ", results)
     
     return results
 
@@ -454,7 +456,7 @@ def main():
                         help="The initial learning rate for Adam.")
     parser.add_argument('--gradient_accumulation_steps', type=int, default=1,
                         help="Number of updates steps to accumulate before performing a backward/update pass.")
-    parser.add_argument("--weight_decay", default=0.0, type=float,
+    parser.add_argument("--weight_decay", default=0.01, type=float,
                         help="Weight decay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-8, type=float,
                         help="Epsilon for Adam optimizer.")
