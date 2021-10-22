@@ -4,6 +4,8 @@
 import os
 import json
 
+ANFA = 0.4
+
 def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
     files_path = []
     datas = []
@@ -35,6 +37,8 @@ def ensemble_from_nbest(folder_dir: str='ensembles/dep'):
                     list_candidate[can['text']] = can['probability']
                 else:
                     list_candidate[can['text']] += can['probability']
+            
+            # list_candidate[""] += ANFA
         
         nbest[id_qas] = list_candidate
 
