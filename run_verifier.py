@@ -50,7 +50,7 @@ def get_score1(args):
         if output_scores[qid] > best_th:
             output_predictions[qid] = ""
 
-    output_prediction_file = "predictions.json"
+    output_prediction_file = "results.json"
     with open(output_prediction_file, "w") as writer:
         writer.write(json.dumps(output_predictions, indent=4) + "\n")
 

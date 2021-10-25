@@ -32,7 +32,10 @@ from transformers import (
     AlbertTokenizer,
     AutoTokenizer,
     ElectraConfig,
-    ElectraTokenizer
+    ElectraTokenizer,
+    GPT2Tokenizer,
+    GPT2Model,
+    GPT2ForSequenceClassification
 )
 from transformers import (
     AdamW, 
@@ -69,7 +72,7 @@ MODEL_CLASSES = {
     'bartpho': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, AutoTokenizer), 
     'xlm-roberta': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVPool, XLMRobertaTokenizer),
     'xlm-roberta-dep': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep, XLMRobertaTokenizer),
-    'xlm-robertwa-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
+    'xlm-roberta-dep2': (XLMRobertaConfig, XLMRobertaForQuestionAnsweringAVDep2, XLMRobertaTokenizer),
     'electra-base': (ElectraConfig, ElectraForQuestionAnsweringAVPool, ElectraTokenizer)
 }
 
